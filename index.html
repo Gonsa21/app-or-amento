@@ -3,16 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gerador de Orçamentos com PDF</title>
+    <title>Gerador de Orçamentos</title>
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#1f2937">
+    
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
     <style>
-        /* Correção de compatibilidade para o html2pdf com Tailwind v4 */
-        .html2pdf__page-break { page-break-before: always; }
-        #orcamentoConteudo {
-            box-sizing: border-box;
-            background-color: #ffffff !important;
+        /* ESTILOS ESPECÍFICOS PARA A IMPRESSÃO / PDF NATIVO */
+        @media print {
+            /* Esconde absolutamente tudo o que não deve ir para o PDF */
+            body {
+                background-color: #ffffff !important;
+                padding: 0 !important;
+            }
+            #formularioCampos, footer, .botao-remover, hr {
+                display: none !important;
+            }
+            /* Garante que o orçamento ocupe a folha inteira no PDF */
+            .max-w-md {
+                max-width: 100% !important;
+                box-shadow: none !important;
+                padding: 0 !important;
+                min-h-screen: auto !important;
+            }
+            #orcamentoConteudo {
+                padding: 0 !important;
+            }
         }
     </style>
 </head>
@@ -84,7 +103,7 @@
         </div>
 
         <footer class="space-y-3 mt-8 border-t border-gray-200 pt-4">
-            <button onclick="gerarPDF()" class="w-full bg-blue-700 text-white py-3 rounded-lg font-bold shadow-md hover:bg-blue-800 transition flex justify-center items-center gap-2 cursor-pointer">
+            <button onclick="gerarPDFNativo()" class="w-full bg-blue-700 text-white py-3 rounded-lg font-bold shadow-md hover:bg-blue-800 transition flex justify-center items-center gap-2 cursor-pointer">
                 📄 Salvar como PDF
             </button>
             <button onclick="enviarWhatsApp()" class="w-full bg-green-600 text-white py-3 rounded-lg font-bold shadow-md hover:bg-green-700 transition flex justify-center items-center gap-2 cursor-pointer">
@@ -99,7 +118,6 @@
     <script>
         let itensOrcamento = [];
 
-        // Coloca automaticamente a data atual
         const data = new Date();
         document.getElementById('pdfDataAtual').innerText = `Emitido em: ${data.toLocaleDateString('pt-BR')}`;
 
@@ -175,50 +193,14 @@
         document.getElementById('clienteNome').addEventListener('input', atualizarInterface);
         document.getElementById('clienteWhats').addEventListener('input', atualizarInterface);
 
-        // FUNÇÃO DE PDF ATUALIZADA E CORRIGIDA
-        function gerarPDF() {
+        // NOVA SOLUÇÃO NATIVA 100% COMPATÍVEL
+        function gerarPDFNativo() {
             if (itensOrcamento.length === 0) {
                 alert('Adicione pelo menos um item antes de gerar o PDF.');
                 return;
             }
-
-            const nomeCliente = document.getElementById('clienteNome').value.trim() || "Cliente";
-
-            // Oculta os botões "✕" antes de gerar o documento
-            const botoesRemover = document.querySelectorAll('.botao-remover');
-            botoesRemover.forEach(btn => btn.style.setProperty('display', 'none', 'important'));
-
-            const elemento = document.getElementById('orcamentoConteudo');
-
-            // Configurações otimizadas para evitar falhas de renderização
-            const opcoes = {
-                margin:       15,
-                filename:     `Orcamento_${nomeCliente.replace(/\s+/g, '_')}.pdf`,
-                image:        { type: 'jpeg', quality: 0.95 },
-                html2canvas:  { 
-                    scale: 2, 
-                    useCORS: true,
-                    logging: false,
-                    letterRendering: true
-                },
-                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            };
-
-            // Promessa de execução direta
-            html2pdf()
-                .set(opcoes)
-                .from(elemento)
-                .toPdf()
-                .save()
-                .then(() => {
-                    // Restaura os botões de remoção
-                    botoesRemover.forEach(btn => btn.style.removeAttribute('display'));
-                })
-                .catch(err => {
-                    console.error("Erro ao gerar PDF: ", err);
-                    alert("Ocorreu um erro ao gerar o PDF. Certifique-se de que não bloqueou os downloads automáticos.");
-                    botoesRemover.forEach(btn => btn.style.removeAttribute('display'));
-                });
+            // Dispara a janela de impressão/PDF do próprio telemóvel ou PC
+            window.print();
         }
 
         function enviarWhatsApp() {
@@ -235,7 +217,6 @@
             }
 
             const totalGeral = itensOrcamento.reduce((sum, item) => sum + item.total, 0);
-
             let texto = `Olá, *${nome}*!\nSegue o orçamento solicitado:\n\n`;
             
             itensOrcamento.forEach((item, index) => {
@@ -249,11 +230,8 @@
             texto += `Qualquer dúvida estou à disposição!`;
 
             const textoCodificado = encodeURIComponent(texto);
-            
             let urlWhats = `https://wa.me/`;
-            if (whats) {
-                urlWhats += (whats.length === 11) ? `55${whats}` : whats;
-            }
+            if (whats) { urlWhats += (whats.length === 11) ? `55${whats}` : whats; }
             urlWhats += `?text=${textoCodificado}`;
 
             window.open(urlWhats, '_blank');
