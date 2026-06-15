@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Orçamentos - Fluxo Certo</title>
+    <title>Gerador de Orçamentos</title>
     
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -12,51 +12,94 @@
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     
     <style>
+        /* CONFIGURAÇÃO DA MARCA D'ÁGUA */
+        .marca-dagua {
+            position: relative;
+        }
+        .marca-dagua::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            /* SUBSTITUA O LINK ABAIXO PELA SUA LOGO */
+            background-image: url('https://via.placeholder.com/400x400/transparent/000000?text=SUA+MARCA');
+            background-repeat: no-repeat;
+            background-position: center center;
+            background-size: 320px;
+            opacity: 0.08;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Garante que o conteúdo do orçamento fique por cima da marca d'água */
+        #orcamentoConteudo > * {
+            position: relative;
+            z-index: 1;
+        }
+
         /* ESTILOS ESPECÍFICOS PARA A IMPRESSÃO / PDF NATIVO */
         @media print {
-            /* Esconde absolutamente tudo o que não deve ir para o PDF */
             body {
                 background-color: #ffffff !important;
                 padding: 0 !important;
             }
-            #formularioCampos, footer, .botao-remover, hr {
+            #formularioCampos, footer, .botao-remover, hr, .no-print {
                 display: none !important;
             }
-            /* Garante que o orçamento ocupe a folha inteira no PDF */
             .max-w-md {
                 max-width: 100% !important;
                 box-shadow: none !important;
                 padding: 0 !important;
-                min-h-screen: auto !important;
             }
             #orcamentoConteudo {
                 padding: 0 !important;
+            }
+            #orcamentoNumero {
+                border: none !important;
+                box-shadow: none !important;
+                background: transparent !important;
+                padding: 0 !important;
+                text-align: right !important;
+            }
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
             }
         }
     </style>
 </head>
 <body class="bg-gray-100 font-sans min-h-screen pb-12">
 
-    <div class="max-w-md mx-auto bg-white min-h-screen shadow-md p-6 flex flex-col justify-between">
+    <div class="max-w-md mx-auto bg-white shadow-md p-6">
         <div>
-            <div id="orcamentoConteudo" class="bg-white p-2 text-gray-800">
-                <header class="mb-6 border-b border-gray-200 pb-4 flex items-center gap-4">
-                    <img src="fluxo.jpg" alt="Logo" class="w-16 h-16 rounded-lg object-cover object-center">
-                    <div class="text-left">
-                        <h1 class="text-2xl font-bold text-gray-800">Orçamento</h1>
-                        <p class="text-xs text-gray-500" id="pdfDataAtual"></p>
+            <div id="orcamentoConteudo" class="bg-white p-2 text-gray-800 marca-dagua">
+                
+                <header class="mb-5 border-b border-gray-200 pb-4 flex justify-between items-start">
+                    <div class="flex items-center gap-4">
+                        <img src="https://via.placeholder.com/60" alt="Logo" class="w-16 h-16 rounded-lg object-cover object-center">
+                        <div class="text-left">
+                            <h1 class="text-2xl font-bold text-gray-800">Orçamento</h1>
+                            <p class="text-xs text-gray-500" id="pdfDataAtual"></p>
+                        </div>
+                    </div>
+                    
+                    <div class="text-right">
+                        <span class="text-xs font-bold uppercase tracking-wider text-gray-400 block">Nº Documento</span>
+                        <input type="text" id="orcamentoNumero" class="text-base font-bold text-blue-700 bg-gray-50 border border-gray-200 rounded px-2 py-0.5 text-right w-24 focus:outline-hidden focus:border-blue-500">
                     </div>
                 </header>
 
-                <section id="pdfDadosCliente" class="mb-6 space-y-1 hidden">
+                <section id="pdfDadosCliente" class="mb-5 space-y-1 hidden">
                     <h2 class="text-xs font-bold uppercase tracking-wider text-gray-400">Cliente</h2>
                     <p class="text-base font-semibold text-gray-800" id="lblClienteNome"></p>
                     <p class="text-sm text-gray-600" id="lblClienteWhats"></p>
                 </section>
 
-                <section class="mb-6">
-                    <h2 class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-3">Serviços / Produtos</h2>
-                    <div id="listaItens" class="space-y-3 mb-4">
+                <section class="mb-5">
+                    <h2 class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">Serviços / Produtos</h2>
+                    <div id="listaItens" class="space-y-2 mb-2">
                         </div>
                 </section>
 
@@ -67,6 +110,7 @@
             </div>
 
             <div id="formularioCampos" class="space-y-6 border-t border-gray-200 pt-6 mt-4">
+                
                 <section class="space-y-4">
                     <h2 class="text-lg font-semibold text-gray-700">Dados do Cliente</h2>
                     <div>
@@ -80,7 +124,7 @@
                 </section>
 
                 <section class="bg-gray-50 p-4 rounded-lg border border-gray-200 space-y-3">
-                    <h2 class="text-sm font-semibold text-gray-700">Adicionar Item</h2>
+                    <h2 class="text-sm font-semibold text-gray-700">Adicionar Item / Serviço</h2>
                     <div>
                         <label class="block text-xs font-medium text-gray-600">Descrição do Serviço/Material</label>
                         <input type="text" id="itemDesc" placeholder="Ex: Mão de obra de pintura" class="mt-1 block w-full rounded-md border-gray-300 p-2 border bg-white">
@@ -120,6 +164,13 @@
 
         const data = new Date();
         document.getElementById('pdfDataAtual').innerText = `Emitido em: ${data.toLocaleDateString('pt-BR')}`;
+
+        function gerarNumeroOrcamento() {
+            const numeroAleatorio = Math.floor(1000 + Math.random() * 9000);
+            document.getElementById('orcamentoNumero').value = `#${numeroAleatorio}`;
+        }
+
+        gerarNumeroOrcamento();
 
         function adicionarItem() {
             const desc = document.getElementById('itemDesc').value.trim();
@@ -173,7 +224,7 @@
                 totalGeral += item.total;
 
                 const itemDiv = document.createElement('div');
-                itemDiv.className = "flex justify-between items-center bg-gray-50 p-3 rounded-md border border-gray-100 text-sm";
+                itemDiv.className = "flex justify-between items-center bg-gray-50/80 p-3 rounded-md border border-gray-100 text-sm";
                 itemDiv.innerHTML = `
                     <div class="max-w-[70%]">
                         <p class="font-semibold text-gray-800 text-left">${item.descricao}</p>
@@ -193,31 +244,26 @@
         document.getElementById('clienteNome').addEventListener('input', atualizarInterface);
         document.getElementById('clienteWhats').addEventListener('input', atualizarInterface);
 
-        // NOVA SOLUÇÃO NATIVA 100% COMPATÍVEL
         function gerarPDFNativo() {
             if (itensOrcamento.length === 0) {
                 alert('Adicione pelo menos um item antes de gerar o PDF.');
                 return;
             }
-            // Dispara a janela de impressão/PDF do próprio telemóvel ou PC
             window.print();
         }
 
         function enviarWhatsApp() {
-            const nome = document.getElementById('clienteNome').value.trim();
+            const nome = document.getElementById('clienteNome').value.trim() || "Cliente";
             const whats = document.getElementById('clienteWhats').value.trim().replace(/\D/g, '');
+            const numOrcamento = document.getElementById('orcamentoNumero').value;
 
-            if (!nome) {
-                alert('Por favor, insira o nome do cliente.');
-                return;
-            }
             if (itensOrcamento.length === 0) {
                 alert('Adicione pelo menos um item ao orçamento.');
                 return;
             }
 
             const totalGeral = itensOrcamento.reduce((sum, item) => sum + item.total, 0);
-            let texto = `Olá, *${nome}*!\nSegue o orçamento solicitado:\n\n`;
+            let texto = `Olá, *${nome}*!\nSegue o *Orçamento ${numOrcamento}* solicitado:\n\n`;
             
             itensOrcamento.forEach((item, index) => {
                 texto += `*${index + 1}. ${item.descricao}*\n`;
@@ -243,6 +289,7 @@
                 document.getElementById('clienteWhats').value = '';
                 itensOrcamento = [];
                 atualizarInterface();
+                gerarNumeroOrcamento();
             }
         }
     </script>
