@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerador de Orçamentos com PDF</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
+    <style>
+        /* Correção de compatibilidade para o html2pdf com Tailwind v4 */
+        .html2pdf__page-break { page-break-before: always; }
+        #orcamentoConteudo {
+            box-sizing: border-box;
+            background-color: #ffffff !important;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans min-h-screen pb-12">
+
+    <div class="max-w-md mx-auto bg-white min-h-screen shadow-md p-6 flex flex-col justify-between">
+        <div>
+            <div id="orcamentoConteudo" class="bg-white p-2 text-gray-800">
+                <header class="mb-6 border-b border-gray-200 pb-4 flex items-center gap-4">
+                    <img src="fluxo.jpg" alt="Logo" class="w-16 h-16 rounded-lg object-cover object-center">
+                    <div class="text-left">
+                        <h1 class="text-2xl font-bold text-gray-800">Orçamento</h1>
+                        <p class="text-xs text-gray-500" id="pdfDataAtual"></p>
+                    </div>
+                </header>
+
+                <section id="pdfDadosCliente" class="mb-6 space-y-1 hidden">
+                    <h2 class="text-xs font-bold uppercase tracking-wider text-gray-400">Cliente</h2>
+                    <p class="text-base font-semibold text-gray-800" id="lblClienteNome"></p>
+                    <p class="text-sm text-gray-600" id="lblClienteWhats"></p>
+                </section>
+
+                <section class="mb-6">
+                    <h2 class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-3">Serviços / Produtos</h2>
+                    <div id="listaItens" class="space-y-3 mb-4">
+                        </div>
+                </section>
+
+                <section class="bg-gray-800 text-white p-4 rounded-lg flex justify-between items-center mb-6">
+                    <span class="text-lg font-bold">Total:</span>
+                    <span id="valorTotal" class="text-2xl font-black">R$ 0,00</span>
+                </section>
+            </div>
+
+            <div id="formularioCampos" class="space-y-6 border-t border-gray-200 pt-6 mt-4">
+                <section class="space-y-4">
+                    <h2 class="text-lg font-semibold text-gray-700">Dados do Cliente</h2>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600">Nome do Cliente</label>
+                        <input type="text" id="clienteNome" placeholder="Ex: João Silva" class="mt-1 block w-full rounded-md border-gray-300 p-2 border focus:border-blue-500 focus:ring-blue-500 bg-white">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600">WhatsApp (com DDD)</label>
+                        <input type="tel" id="clienteWhats" placeholder="Ex: 27999998888" class="mt-1 block w-full rounded-md border-gray-300 p-2 border focus:border-blue-500 focus:ring-blue-500 bg-white">
+                    </div>
+                </section>
+
+                <section class="bg-gray-50 p-4 rounded-lg border border-gray-200 space-y-3">
+                    <h2 class="text-sm font-semibold text-gray-700">Adicionar Item</h2>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600">Descrição do Serviço/Material</label>
+                        <input type="text" id="itemDesc" placeholder="Ex: Mão de obra de pintura" class="mt-1 block w-full rounded-md border-gray-300 p-2 border bg-white">
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600">Qtd / Horas</label>
+                            <input type="number" id="itemQtd" value="1" min="1" class="mt-1 block w-full rounded-md border-gray-300 p-2 border bg-white">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600">Valor Unitário (R$)</label>
+                            <input type="number" id="itemValor" placeholder="0.00" step="0.01" class="mt-1 block w-full rounded-md border-gray-300 p-2 border bg-white">
+                        </div>
+                    </div>
+                    <button type="button" onclick="adicionarItem()" class="w-full bg-blue-600 text-white py-2 rounded-md font-medium hover:bg-blue-700 transition cursor-pointer">
+                        + Adicionar Item
+                    </button>
+                </section>
+            </div>
+        </div>
+
+        <footer class="space-y-3 mt-8 border-t border-gray-200 pt-4">
+            <button onclick="gerarPDF()" class="w-full bg-blue-700 text-white py-3 rounded-lg font-bold shadow-md hover:bg-blue-800 transition flex justify-center items-center gap-2 cursor-pointer">
+                📄 Salvar como PDF
+            </button>
+            <button onclick="enviarWhatsApp()" class="w-full bg-green-600 text-white py-3 rounded-lg font-bold shadow-md hover:bg-green-700 transition flex justify-center items-center gap-2 cursor-pointer">
+                💬 Enviar texto via WhatsApp
+            </button>
+            <button onclick="limparFormulario()" class="w-full bg-gray-200 text-gray-700 py-2 rounded-lg font-medium hover:bg-gray-300 transition cursor-pointer">
+                Limpar Tudo
+            </button>
+        </footer>
+    </div>
+
+    <script>
+        let itensOrcamento = [];
+
+        // Coloca automaticamente a data atual
+        const data = new Date();
+        document.getElementById('pdfDataAtual').innerText = `Emitido em: ${data.toLocaleDateString('pt-BR')}`;
+
+        function adicionarItem() {
+            const desc = document.getElementById('itemDesc').value.trim();
+            const qtd = parseInt(document.getElementById('itemQtd').value) || 1;
+            const valor = parseFloat(document.getElementById('itemValor').value) || 0;
+
+            if (!desc || valor <= 0) {
+                alert('Por favor, preencha a descrição e o valor do item.');
+                return;
+            }
+
+            const novoItem = {
+                id: Date.now(),
+                descricao: desc,
+                quantidade: qtd,
+                valorUnitario: valor,
+                total: qtd * valor
+            };
+
+            itensOrcamento.push(novoItem);
+            atualizarInterface();
+
+            document.getElementById('itemDesc').value = '';
+            document.getElementById('itemQtd').value = '1';
+            document.getElementById('itemValor').value = '';
+            document.getElementById('itemDesc').focus();
+        }
+
+        function removerItem(id) {
+            itensOrcamento = itensOrcamento.filter(item => item.id !== id);
+            atualizarInterface();
+        }
+
+        function atualizarInterface() {
+            const lista = document.getElementById('listaItens');
+            lista.innerHTML = '';
+            let totalGeral = 0;
+
+            const nomeCliente = document.getElementById('clienteNome').value.trim();
+            const whatsCliente = document.getElementById('clienteWhats').value.trim();
+            
+            if(nomeCliente || whatsCliente) {
+                document.getElementById('pdfDadosCliente').classList.remove('hidden');
+                document.getElementById('lblClienteNome').innerText = nomeCliente || 'Cliente não identificado';
+                document.getElementById('lblClienteWhats').innerText = whatsCliente ? `WhatsApp: ${whatsCliente}` : '';
+            } else {
+                document.getElementById('pdfDadosCliente').classList.add('hidden');
+            }
+
+            itensOrcamento.forEach(item => {
+                totalGeral += item.total;
+
+                const itemDiv = document.createElement('div');
+                itemDiv.className = "flex justify-between items-center bg-gray-50 p-3 rounded-md border border-gray-100 text-sm";
+                itemDiv.innerHTML = `
+                    <div class="max-w-[70%]">
+                        <p class="font-semibold text-gray-800 text-left">${item.descricao}</p>
+                        <p class="text-xs text-gray-500 text-left">${item.quantidade}x de R$ ${item.valorUnitario.toFixed(2).replace('.', ',')}</p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="font-bold text-gray-700">R$ ${item.total.toFixed(2).replace('.', ',')}</span>
+                        <button onclick="removerItem(${item.id})" class="text-red-500 font-bold hover:text-red-700 botao-remover cursor-pointer">✕</button>
+                    </div>
+                `;
+                lista.appendChild(itemDiv);
+            });
+
+            document.getElementById('valorTotal').innerText = `R$ ${totalGeral.toFixed(2).replace('.', ',')}`;
+        }
+
+        document.getElementById('clienteNome').addEventListener('input', atualizarInterface);
+        document.getElementById('clienteWhats').addEventListener('input', atualizarInterface);
+
+        // FUNÇÃO DE PDF ATUALIZADA E CORRIGIDA
+        function gerarPDF() {
+            if (itensOrcamento.length === 0) {
+                alert('Adicione pelo menos um item antes de gerar o PDF.');
+                return;
+            }
+
+            const nomeCliente = document.getElementById('clienteNome').value.trim() || "Cliente";
+
+            // Oculta os botões "✕" antes de gerar o documento
+            const botoesRemover = document.querySelectorAll('.botao-remover');
+            botoesRemover.forEach(btn => btn.style.setProperty('display', 'none', 'important'));
+
+            const elemento = document.getElementById('orcamentoConteudo');
+
+            // Configurações otimizadas para evitar falhas de renderização
+            const opcoes = {
+                margin:       15,
+                filename:     `Orcamento_${nomeCliente.replace(/\s+/g, '_')}.pdf`,
+                image:        { type: 'jpeg', quality: 0.95 },
+                html2canvas:  { 
+                    scale: 2, 
+                    useCORS: true,
+                    logging: false,
+                    letterRendering: true
+                },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            // Promessa de execução direta
+            html2pdf()
+                .set(opcoes)
+                .from(elemento)
+                .toPdf()
+                .save()
+                .then(() => {
+                    // Restaura os botões de remoção
+                    botoesRemover.forEach(btn => btn.style.removeAttribute('display'));
+                })
+                .catch(err => {
+                    console.error("Erro ao gerar PDF: ", err);
+                    alert("Ocorreu um erro ao gerar o PDF. Certifique-se de que não bloqueou os downloads automáticos.");
+                    botoesRemover.forEach(btn => btn.style.removeAttribute('display'));
+                });
+        }
+
+        function enviarWhatsApp() {
+            const nome = document.getElementById('clienteNome').value.trim();
+            const whats = document.getElementById('clienteWhats').value.trim().replace(/\D/g, '');
+
+            if (!nome) {
+                alert('Por favor, insira o nome do cliente.');
+                return;
+            }
+            if (itensOrcamento.length === 0) {
+                alert('Adicione pelo menos um item ao orçamento.');
+                return;
+            }
+
+            const totalGeral = itensOrcamento.reduce((sum, item) => sum + item.total, 0);
+
+            let texto = `Olá, *${nome}*!\nSegue o orçamento solicitado:\n\n`;
+            
+            itensOrcamento.forEach((item, index) => {
+                texto += `*${index + 1}. ${item.descricao}*\n`;
+                texto += `Qtd: ${item.quantidade} | Unitário: R$ ${item.valorUnitario.toFixed(2).replace('.', ',')}\n`;
+                texto += `Subtotal: R$ ${item.total.toFixed(2).replace('.', ',')}\n\n`;
+            });
+
+            texto += `───────────────────\n`;
+            texto += `*Valor Total: R$ ${totalGeral.toFixed(2).replace('.', ',')}*\n\n`;
+            texto += `Qualquer dúvida estou à disposição!`;
+
+            const textoCodificado = encodeURIComponent(texto);
+            
+            let urlWhats = `https://wa.me/`;
+            if (whats) {
+                urlWhats += (whats.length === 11) ? `55${whats}` : whats;
+            }
+            urlWhats += `?text=${textoCodificado}`;
+
+            window.open(urlWhats, '_blank');
+        }
+
+        function limparFormulario() {
+            if (confirm('Deseja limpar todo o orçamento atual?')) {
+                document.getElementById('clienteNome').value = '';
+                document.getElementById('clienteWhats').value = '';
+                itensOrcamento = [];
+                atualizarInterface();
+            }
+        }
+    </script>
+</body>
+</html>
