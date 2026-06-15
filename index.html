@@ -262,11 +262,36 @@
         document.getElementById('clienteWhats').addEventListener('input', atualizarInterface);
 
         function gerarPDFNativo() {
-            if (itensOrcamento.length === 0) {
-                alert('Adicione pelo menos um item antes de gerar o PDF.');
-                return;
-            }
-            window.print();
+        if (itensOrcamento.length === 0) {
+        alert('Adicione pelo menos um item antes de gerar o PDF.');
+        return;
+        }
+
+        // Pega o número do orçamento e o nome do cliente
+        const numOrcamento = document.getElementById('orcamentoNumero').value.replace('#', '');
+        let nomeCliente = document.getElementById('clienteNome').value.trim();
+        
+        // Se não tiver nome de cliente, usa um padrão
+        if (!nomeCliente) {
+            nomeCliente = "Cliente";
+        }
+
+        // Limpa caracteres estranhos que o sistema operacional não aceita em nomes de arquivos
+        const nomeLimpo = nomeCliente.replace(/[/\\?%*:|"<>]/g, '-');
+
+        // Guarda o título original da página
+        const tituloOriginal = document.title;
+
+        // Define o novo título começando pelo NOME DO CLIENTE
+        document.title = `${nomeLimpo} - Orcamento ${numOrcamento}`;
+
+        // Abre a janela de impressão/salvamento
+        window.print();
+
+        // Restaura o título original logo após fechar a janela de impressão
+        setTimeout(() => {
+            document.title = tituloOriginal;
+        }, 1000);
         }
 
         function enviarWhatsApp() {
