@@ -1,0 +1,22 @@
+{
+  "name": "Fluxo Certo Orçamentos",
+  "short_name": "Fluxo Certo",
+  "description": "Gerador de orçamentos rápido e prático",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#1f2937",
+  "theme_color": "#1f2937",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "fluxo.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg"
+    },
+    {
+      "src": "fluxo.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg"
+    }
+  ]
+}
