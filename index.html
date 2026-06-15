@@ -8,7 +8,20 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#1f2937">
-    
+
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="fluxo.jpg">
+
+    <script>
+    // Registra o Service Worker para ativar o PWA
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('sw.js')
+                .then(reg => console.log('PWA Ativo com sucesso!', reg))
+                .catch(err => console.log('Erro ao registrar PWA:', err));
+        });
+    }
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     
     <style>
