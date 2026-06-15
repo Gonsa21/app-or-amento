@@ -55,6 +55,10 @@
             }
             #orcamentoConteudo {
                 padding: 0 !important;
+                background-color: transparent !important;
+            }
+            .item-orcamento {
+                background-color: transparent !important;
             }
             #orcamentoNumero {
                 border: none !important;
@@ -74,7 +78,7 @@
 
     <div class="max-w-md mx-auto bg-white shadow-md p-6">
         <div>
-            <div id="orcamentoConteudo" class="bg-white p-2 text-gray-800 marca-dagua">
+            <div id="orcamentoConteudo" class="p-2 text-gray-800 marca-dagua bg-transparent">
                 
                 <header class="mb-5 border-b border-gray-200 pb-4 flex justify-between items-start">
                     <div class="flex items-center gap-4">
@@ -100,7 +104,7 @@
                 <section class="mb-5">
                     <h2 class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">Serviços / Produtos</h2>
                     <div id="listaItens" class="space-y-2 mb-2">
-                        </div>
+                    </div>
                 </section>
 
                 <section class="bg-gray-800 text-white p-4 rounded-lg flex justify-between items-center mb-6">
@@ -224,7 +228,7 @@
                 totalGeral += item.total;
 
                 const itemDiv = document.createElement('div');
-                itemDiv.className = "flex justify-between items-center bg-gray-50/80 p-3 rounded-md border border-gray-100 text-sm";
+                itemDiv.className = "item-orcamento flex justify-between items-center bg-transparent p-3 border-b border-gray-100 text-sm";
                 itemDiv.innerHTML = `
                     <div class="max-w-[70%]">
                         <p class="font-semibold text-gray-800 text-left">${item.descricao}</p>
