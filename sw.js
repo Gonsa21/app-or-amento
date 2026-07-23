@@ -2,7 +2,7 @@ const CACHE_NAME = 'fluxo-certo-v1';
 const ASSETS = [
   'index.html',
   'manifest.json',
-  'fluxo.jpg'
+  'fluxo.png'
 ];
 
 // Instala o Service Worker e guarda os arquivos no cache
